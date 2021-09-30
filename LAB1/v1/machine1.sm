@@ -1,0 +1,76 @@
+%class machine.Machine
+%package machine
+
+%start MainMap::Start
+
+%map MainMap
+%%
+Start
+{
+    Space       Error          {Incorrect();}
+    Unknown     Error          {Incorrect();}
+    Letter(symb: char)      Error          {Incorrect();}
+    BigLetter(symb: char)   Error          {Incorrect();}
+    Equality    Error          {Incorrect();}
+    EOS         Error          {Incorrect();}
+    Digit(symb: char)       Str_num        {addToBuffer(symb);}
+}
+Str_num
+{
+    Space       Type_name       {save_n_str();clear_buf();}
+    Unknown     Error          {Incorrect();}
+    Digit(symb: char)       Str_num        {addToBuffer(symb);}
+    Equality    Error          {Incorrect();}
+    Letter(symb: char)      Error          {Incorrect();}
+    BigLetter(symb: char)   Error          {Incorrect();}
+    EOS         Error          {Incorrect();}
+}
+Type_name
+{
+    Letter(symb: char)     Type_name       {addToBuffer(symb);}
+    Space()[ctxt.IsType()]        Var_name        {save_type(); clear_buf();}
+    BigLetter(symb: char)     Var_name        {addToBuffer(symb); save_type_int();}
+    Digit(symb: char)       Var_name        {addToBuffer(symb); save_type_int();}
+    EOS()[ctxt.IsVariable()]      Success     {save_type_int();save_var();Correct();}
+    EOS         Error       {Incorrect();}
+    Unknown     Error       {Incorrect();}
+    Equality       Literals        {save_type_int();save_var();clear_buf();}
+    Space       Error       {Incorrect();}
+}
+Var_name
+{
+    Letter(symb: char)      Var_name        {addToBuffer(symb);}
+    BigLetter(symb: char)   Var_name        {addToBuffer(symb);}
+    Digit(symb: char)       Var_name        {addToBuffer(symb);}
+    EOS()[ctxt.IsVariable()]      Success     {save_var();Correct();}
+    EOS         Error       {Incorrect();}
+    Unknown     Error       {Incorrect();}
+    Equality()[ctxt.IsVariable()]    Literals {save_var();clear_buf();}
+    Space       Error       {Incorrect();}
+    Equality    Error       {Incorrect();}
+}
+Literals
+{
+    Letter(symb: char)      Literals        {addToBuffer(symb);}
+    BigLetter(symb: char)   Literals        {addToBuffer(symb);}
+    Digit(symb: char)       Literals        {addToBuffer(symb);}
+    EOS()[ctxt.IsVariable()]      Success     {save_literal();Correct();}
+    EOS()[ctxt.IsNum()]      Success     {save_literal();Correct();}
+    EOS         Error       {Incorrect();}
+    Unknown     Error       {Incorrect();}
+    Space       Error       {Incorrect();}
+    Equality    Error       {Incorrect();}
+}
+Success
+{}
+Error
+{
+    Letter(symb: char)      nil       {}
+    BigLetter(symb: char)   nil       {}
+    Digit(symb: char)       nil       {}
+    EOS         nil       {}
+    Unknown     nil       {}
+    Space       nil       {}
+    Equality    nil       {}
+}
+%%
