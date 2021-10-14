@@ -1,0 +1,44 @@
+/* this is the scanner example from the JLex website
+   (with small modifications to make it more readable) */
+import java.util.ArrayList;
+
+%%
+
+%class Lexer
+%unicode
+%cup
+%line
+%column
+
+%{
+ArrayList<String> results = new ArrayList<String>();
+%}
+DIGIT=[0-9]
+SPACE=[ \t] //check it
+TYPE_NAME = (int)|(long)|(short)
+
+%state YYINITIAL
+
+%%
+<YYINITIAL> {
+{DIGIT}+/{SPACE}+{TYPE_NAME} {results.add(yytext()); yybegin(TYPE);}
+{DIGIT}+/{SPACE}+([a-zA-Z][a-zA-Z0-9]{0,15}) {results.add(yytext()); results.add("int"); yybegin(VARNAME);}
+.*\n {return 0;}
+}
+<TYPE> {
+{SPACE}+ {}
+{TYPE_NAME}/{SPACE}+([a-zA-Z][a-zA-Z0-9]{0,15}) {results.add(yytext()); yybegin(VARNAME);}
+.*\n {yybegin(YYINITIAL); return 0;}
+}
+<VARNAME> {
+{SPACE}+ {}
+[a-zA-Z][a-zA-Z0-9]{0,15}\n {results.add(yytext()); yybegin(YYINITIAL); return 1;} //со знаком \n
+([a-zA-Z][a-zA-Z0-9]{0,15})/({SPACE}*={SPACE}*) {results.add(yytext()); yybegin(LITERAL);}
+.*\n {yybegin(YYINITIAL); return 0;}
+}
+<LITERAL> {
+{SPACE}*={SPACE}* {}
+{DIGIT}+\n {results.add(yytext()); yybegin(YYINITIAL); return 1;} //со знаком \n}
+[a-zA-Z][a-zA-Z0-9]{0,15}\n {results.add(yytext()); yybegin(YYINITIAL); return 1;} //со знаком \n
+.*\n {yybegin(YYINITIAL); return 0;}
+}
