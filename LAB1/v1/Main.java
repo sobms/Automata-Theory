@@ -12,16 +12,17 @@ public class Main {
         Machine1 machine = new Machine1(actions);
         int retcode = 0;
         Hashtable<String, ArrayList<String[]>> table = new Hashtable<String, ArrayList<String[]>>();
-        InputStream inputStream = System.in;
-        Reader inputStreamReader = new InputStreamReader(inputStream);
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
         HashSet<String> variables = new HashSet<String>();
+
+        FileReader fileReader = new FileReader("C:\\Users\\79192\\Desktop\\Automata_Theory\\LAB1\\file.txt");
+        BufferedReader reader = new BufferedReader(fileReader);
+        String line = reader.readLine();
         while (true) {
-            String line = bufferedReader.readLine();
-            if (line.equals("")) {
+            System.out.println(line);
+            if (line == null) {
                 break;
             }
-            line = line + '\n';
+            line += '\n';
             boolean result = machine.Check_str(line);
             if (result)
             {
@@ -42,16 +43,18 @@ public class Main {
                     table.get(var).add(line_data);
                 }
                 System.out.println("Line is Correct");
+
             }
             else if (!result)
             {
                 System.out.println("Line is Incorrect");
             }
+            line = reader.readLine();
         }
         //output
         for (String it: variables){
-            for (String[] line: table.get(it)) {
-                System.out.printf("%s - %s\n", line[1], it);
+            for (String[] l: table.get(it)) {
+                System.out.printf("%s - %s type: %s\n", l[1], it, l[0]);
             }
         }
     }

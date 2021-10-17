@@ -7,23 +7,16 @@
 %%
 Start
 {
-    Space       Error          {Incorrect();}
-    Unknown     Error          {Incorrect();}
-    Letter(symb: char)      Error          {Incorrect();}
-    BigLetter(symb: char)   Error          {Incorrect();}
-    Equality    Error          {Incorrect();}
-    EOS         Error          {Incorrect();}
+    Default     Error          {}
+    EOS         Error          {Incorrect();clear_buf();}
     Digit(symb: char)       Str_num        {addToBuffer(symb);}
 }
 Str_num
 {
     Space       Type_name       {save_n_str();clear_buf();}
-    Unknown     Error          {Incorrect();}
     Digit(symb: char)       Str_num        {addToBuffer(symb);}
-    Equality    Error          {Incorrect();}
-    Letter(symb: char)      Error          {Incorrect();}
-    BigLetter(symb: char)   Error          {Incorrect();}
-    EOS         Error          {Incorrect();}
+    Default     Error          {}
+    EOS         Error          {Incorrect();clear_buf();}
 }
 Type_name
 {
@@ -31,46 +24,41 @@ Type_name
     Space()[ctxt.IsType()]        Var_name        {save_type(); clear_buf();}
     BigLetter(symb: char)     Var_name        {addToBuffer(symb); save_type_int();}
     Digit(symb: char)       Var_name        {addToBuffer(symb); save_type_int();}
-    EOS()[ctxt.IsVariable()]      Success     {save_type_int();save_var();Correct();}
-    EOS         Error       {Incorrect();}
-    Unknown     Error       {Incorrect();}
+    EOS()[ctxt.IsVariable()]      Success     {save_type_int();save_var();clear_buf();Correct();}
+    EOS         Error       {Incorrect();clear_buf();}
     Equality       Literals        {save_type_int();save_var();clear_buf();}
-    Space       Error       {Incorrect();}
+    Default     Error              {}
 }
 Var_name
 {
     Letter(symb: char)      Var_name        {addToBuffer(symb);}
     BigLetter(symb: char)   Var_name        {addToBuffer(symb);}
     Digit(symb: char)       Var_name        {addToBuffer(symb);}
-    EOS()[ctxt.IsVariable()]      Success     {save_var();Correct();}
-    EOS         Error       {Incorrect();}
-    Unknown     Error       {Incorrect();}
+    EOS()[ctxt.IsVariable()]      Success     {save_var();clear_buf();Correct();}
+    EOS         Error       {Incorrect();clear_buf();}
     Equality()[ctxt.IsVariable()]    Literals {save_var();clear_buf();}
-    Space       Error       {Incorrect();}
-    Equality    Error       {Incorrect();}
+    Default     Error       {}
 }
 Literals
 {
     Letter(symb: char)      Literals        {addToBuffer(symb);}
     BigLetter(symb: char)   Literals        {addToBuffer(symb);}
     Digit(symb: char)       Literals        {addToBuffer(symb);}
-    EOS()[ctxt.IsVariable()]      Success     {save_literal();Correct();}
-    EOS()[ctxt.IsNum()]      Success     {save_literal();Correct();}
-    EOS         Error       {Incorrect();}
-    Unknown     Error       {Incorrect();}
-    Space       Error       {Incorrect();}
-    Equality    Error       {Incorrect();}
+    EOS()[ctxt.IsVariable()]      Success     {save_literal();clear_buf();Correct();}
+    EOS()[ctxt.IsNum()]      Success     {save_literal();clear_buf();Correct();}
+    EOS         Error       {Incorrect();clear_buf();}
+    Default     Error        {}
 }
 Success
 {}
 Error
 {
-    Letter(symb: char)      nil       {}
-    BigLetter(symb: char)   nil       {}
-    Digit(symb: char)       nil       {}
-    EOS         nil       {}
-    Unknown     nil       {}
-    Space       nil       {}
-    Equality    nil       {}
+    Letter(symb: char)      nil       {Incorrect();}
+    BigLetter(symb: char)   nil       {Incorrect();}
+    Digit(symb: char)       nil       {Incorrect();}
+    EOS         nil       {Incorrect();clear_buf();}
+    Unknown     nil       {Incorrect();}
+    Space       nil       {Incorrect();}
+    Equality    nil       {Incorrect();}
 }
 %%

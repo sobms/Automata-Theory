@@ -60,7 +60,7 @@ public class Machine1actions {
             return false;
         }
         char s = buffer.charAt(0);
-        if (buffer.length() < 16 && ((s >= 'a' && s <= 'z') || (s >= 'A' && s <= 'Z'))) {
+        if (buffer.length() <= 16 && ((s >= 'a' && s <= 'z') || (s >= 'A' && s <= 'Z'))) {
             return true;
         } else {
             return false;
