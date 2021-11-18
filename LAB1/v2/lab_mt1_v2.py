@@ -2,7 +2,7 @@ import re
 
 data_list = {}
 bad_var = set()
-file = open("C:\\Users\\79192\\Desktop\\Automata_Theory\\LAB1\\file.txt",  "r")
+file = open("C:\\Users\\79192\\Desktop\\Automata_Theory\\LAB1\\file100k.txt",  "r")
 count = 0 ###
 while (True):
     line = file.readline()

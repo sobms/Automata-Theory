@@ -20,7 +20,7 @@ public class Main {
         Hashtable<String, ArrayList<String[]>> statistic = new Hashtable<String, ArrayList<String[]>>();
         HashSet<String> variables = new HashSet<String>();
 
-        FileReader fileReader = new FileReader("D:\\java\\lab1_mt_v3\\src\\main\\java\\file");
+        FileReader fileReader = new FileReader("C:\\Users\\79192\\Desktop\\Automata_Theory\\LAB1\\file_old.txt");
         BufferedReader reader = new BufferedReader(fileReader);
         String line = reader.readLine();
         StringReader lineReader = new StringReader(line+'\n');

@@ -14,11 +14,11 @@ public class Timing_Main {
         public static void main(String[] args) throws IOException {
 
             long sum = 0;
-            FileWriter fw = new FileWriter("C:\\Users\\79192\\Desktop\\Automata_Theory\\LAB1\\file_old.txt",true); //the true will append the new data
+            FileWriter fw = new FileWriter("C:\\Users\\79192\\Desktop\\Automata_Theory\\LAB1\\file100k — копия.txt",true); //the true will append the new data
             fw.write("\r\n"); //дозапись конца строки
             fw.close();
             for (int i=0; i < 10; i++) {
-                FileReader fileReader = new FileReader("C:\\Users\\79192\\Desktop\\Automata_Theory\\LAB1\\file.txt");
+                FileReader fileReader = new FileReader("C:\\Users\\79192\\Desktop\\Automata_Theory\\LAB1\\file100k — копия.txt");
                 BufferedReader reader = new BufferedReader(fileReader);
                 long nano_startTime = System.nanoTime();
                 Lexer ftp = new Lexer(reader);
