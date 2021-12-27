@@ -1,0 +1,64 @@
+%class machine.Machine
+%package machine
+
+%start MainMap::Start
+
+%map MainMap
+%%
+Start
+{
+    Default     Error          {}
+    EOS         Error          {Incorrect();clear_buf();}
+    Digit(symb: char)       Str_num        {addToBuffer(symb);}
+}
+Str_num
+{
+    Space       Type_name       {save_n_str();clear_buf();}
+    Digit(symb: char)       Str_num        {addToBuffer(symb);}
+    Default     Error          {}
+    EOS         Error          {Incorrect();clear_buf();}
+}
+Type_name
+{
+    Letter(symb: char)     Type_name       {addToBuffer(symb);}
+    Space()[ctxt.IsType()]        Var_name        {save_type(); clear_buf();}
+    BigLetter(symb: char)     Var_name        {addToBuffer(symb); save_type_int();}
+    Digit(symb: char)       Var_name        {addToBuffer(symb); save_type_int();}
+    EOS()[ctxt.IsVariable()]      Success     {save_type_int();save_var();clear_buf();Correct();}
+    EOS         Error       {Incorrect();clear_buf();}
+    Equality       Literals        {save_type_int();save_var();clear_buf();}
+    Default     Error              {}
+}
+Var_name
+{
+    Letter(symb: char)      Var_name        {addToBuffer(symb);}
+    BigLetter(symb: char)   Var_name        {addToBuffer(symb);}
+    Digit(symb: char)       Var_name        {addToBuffer(symb);}
+    EOS()[ctxt.IsVariable()]      Success     {save_var();clear_buf();Correct();}
+    EOS         Error       {Incorrect();clear_buf();}
+    Equality()[ctxt.IsVariable()]    Literals {save_var();clear_buf();}
+    Default     Error       {}
+}
+Literals
+{
+    Letter(symb: char)      Literals        {addToBuffer(symb);}
+    BigLetter(symb: char)   Literals        {addToBuffer(symb);}
+    Digit(symb: char)       Literals        {addToBuffer(symb);}
+    EOS()[ctxt.IsVariable()]      Success     {save_literal();clear_buf();Correct();}
+    EOS()[ctxt.IsNum()]      Success     {save_literal();clear_buf();Correct();}
+    EOS         Error       {Incorrect();clear_buf();}
+    Default     Error        {}
+}
+Success
+{}
+Error
+{
+    Letter(symb: char)      nil       {Incorrect();}
+    BigLetter(symb: char)   nil       {Incorrect();}
+    Digit(symb: char)       nil       {Incorrect();}
+    EOS         nil       {Incorrect();clear_buf();}
+    Unknown     nil       {Incorrect();}
+    Space       nil       {Incorrect();}
+    Equality    nil       {Incorrect();}
+}
+%%
