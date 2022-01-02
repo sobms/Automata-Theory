@@ -10,7 +10,7 @@ namespace RegexLib {
 		Node* SyntaxTree::re2tree(std::string expr) {
 			std::vector<Node*> expr_vec;
 
-			expr = "(" + expr + ")"; //0
+			expr = "((" + expr + ")$)"; //0 //ADDED $ IN THE END OF STRING
 			for (int i = 0; i < expr.length(); i++) { //string to vector(tokenkization)
 				Node* node = new Node(std::string(1, expr[i]), None);
 				expr_vec.push_back(node);
@@ -39,15 +39,16 @@ namespace RegexLib {
 							throw std::exception("There is no elements inside brackets. Do you mean: '[#]'?");
 						}
 						if ((expr_vec[i]->symb != "]") || ((expr_vec[i]->tag != None))) { //symbol, not close bracket
+							if ((expr_vec[i]->symb == "#") && (expr_vec[i]->tag == None)) {
+								expr_vec[i]->tag = Empty_str;
+							}
 							if (expr_vec[i - 1]->tag == None) {
 								expr_vec[i - 1]->tag = A_node;
 							}
 							if (expr_vec[i]->tag == None) {
 								expr_vec[i]->tag = A_node;
 							}
-							if (expr_vec[i]->symb == "#") {
-								expr_vec[i]->symb = "";
-							}
+
 							Node* CG_node = new Node(" ", Capture_group_node, expr_vec[i - 1], expr_vec[i]);
 							expr_vec[i]->parent = CG_node;
 							expr_vec[i - 1]->parent = CG_node;
@@ -88,8 +89,7 @@ namespace RegexLib {
 						expr_vec[i]->tag = A_node;
 					}
 					else if ((expr_vec[i]->symb == "#") && (expr_vec[i]->tag == None)){
-						expr_vec[i]->symb = "";
-						expr_vec[i]->tag = A_node;
+						expr_vec[i]->tag = Empty_str;
 					}
 				} // create A_nodes
 
@@ -132,6 +132,9 @@ namespace RegexLib {
 						}
 						else {
 							throw std::exception("Not a number inside curly parenthesis");
+						}
+						if (std::atoi(count.c_str()) < 1) {
+							throw std::exception("Incorrect number inside curly parenthesis");
 						}
 						expr_vec.erase(expr_vec.begin() + i);
 						ind_rbracket--;
@@ -179,7 +182,7 @@ namespace RegexLib {
 		}
 		void SyntaxTree::bypass(Node* ptr, int idx, int prev) {
 			std::map <int, std::string> tag = { {A_node, "A_node"}, {Star_node, "Star_node"}, {Or_node, "Or_node"},
-				{And_node, "And_node"}, {Capture_group_node, "Capture_group_node"}, {Repeat_node, "Repeat_node"} };
+				{And_node, "And_node"}, {Capture_group_node, "Capture_group_node"}, {Repeat_node, "Repeat_node"},  {Empty_str, "Empty_str"} };
 			if (ptr->parent) {
 				graph += std::to_string(prev) + "->" + std::to_string(idx) + ";\n";
 			}
@@ -193,7 +196,8 @@ namespace RegexLib {
 			if (ptr->symb == "\\") {
 				ptr->symb = "\\\\";
 			}
-			graph += std::to_string(prev) + " [label=\"" + std::to_string(prev) + " " + ptr->symb + " (" + tag[ptr->tag] + ")" + "\"];\n";
+			graph += std::to_string(prev) + " [label=\"" + std::to_string(prev) + " " + ptr->symb + " " 
+				+ " (" + tag[ptr->tag] + ")" + "\"];\n";
 		}
 		void SyntaxTree::getTreeImg() {
 			Node* ptr = get_root();

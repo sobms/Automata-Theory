@@ -12,16 +12,21 @@ namespace RegexLib {
 		Or_node,
 		And_node,
 		Capture_group_node,
-		Repeat_node
+		Repeat_node,
+		Empty_str
 	};
 	typedef struct Node {
 		Node* left;
 		Node* right;
 		Node* parent;
 		Tag tag;
+		bool nullable;
+		std::set<long> first;
+		std::set<long> last;
 		std::string symb;
-		Node(std::string symbol, Tag t, Node* l = nullptr, Node* r = nullptr, Node* p = nullptr) :
-			symb(symbol), tag(t), left(l), right(r), parent(p) {}
+		long id_pos;
+		Node(std::string symbol, Tag t, Node* l = nullptr, Node* r = nullptr, Node* p = nullptr, long id = -1) :
+			symb(symbol), tag(t), id_pos(id), left(l), right(r), parent(p), nullable(false) {}
 	};
 
 	class SyntaxTree {
