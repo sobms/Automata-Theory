@@ -20,7 +20,7 @@ namespace RegexLib {
 
 				if ((ptr->tag == A_node) || (ptr->tag == Empty_str)) {
 					ptr->id_pos = i;
-					if (ptr->symb != "$") {
+					if ((ptr->symb != "$") && (ptr->symb != "#")){
 						alphabet.insert(ptr->symb);
 					}
 					i++;
@@ -51,7 +51,7 @@ namespace RegexLib {
 		case Repeat_node:
 			temp_node->nullable = temp_node->left->nullable;
 			break;
-		case Capture_group_node:
+		case Choise_group_node:
 			temp_node->nullable = temp_node->left->nullable || temp_node->right->nullable;
 			break;
 		}
@@ -83,7 +83,7 @@ namespace RegexLib {
 		case Repeat_node:
 			temp_node->first.insert(temp_node->left->first.begin(), temp_node->left->first.end());
 			break;
-		case Capture_group_node:
+		case Choise_group_node:
 			temp_node->first.insert(temp_node->left->first.begin(), temp_node->left->first.end());
 			temp_node->first.insert(temp_node->right->first.begin(), temp_node->right->first.end());
 			break;
@@ -116,7 +116,7 @@ namespace RegexLib {
 		case Repeat_node:
 			temp_node->last.insert(temp_node->left->last.begin(), temp_node->left->last.end());
 			break;
-		case Capture_group_node:
+		case Choise_group_node:
 			temp_node->last.insert(temp_node->left->last.begin(), temp_node->left->last.end());
 			temp_node->last.insert(temp_node->right->last.begin(), temp_node->right->last.end());
 			break;
@@ -237,6 +237,7 @@ namespace RegexLib {
 			}
 			processed_states.push_back(temp_state);
 		}
+		states = processed_states;
 	}
 	std::string ToString(std::set<long> s) {
 		std::string str;
@@ -307,5 +308,127 @@ namespace RegexLib {
 		gvLayout(gvc, Graph, "dot");
 		int res = gvRenderFilename(gvc, Graph, "jpeg", "D:\\Automata-Theory-main\\LAB2\\outDFA.jpg");
 		agclose(Graph);
+	}
+	std::vector<state*> remove_states(std::vector<state*> set_states, std::vector<state*> removing_states) {
+		std::vector<state*>::iterator it;
+		for (auto rm_state : removing_states) {
+			for (it = set_states.begin(); it != set_states.end(); it++) {
+				if (rm_state == *it) {
+					set_states.erase(it);
+					break;
+				}
+			}
+		}
+		return set_states;
+	}
+	bool belong(state* st1, std::vector<state*> set_states) {
+		for (auto st2 : set_states) {
+			if (st1 == st2) {
+				return true;
+			}
+		}
+		return false;
+	}
+	std::vector<state*> get_group_owner(state* st1, std::vector<std::vector<state*>> pi_splitting) {
+		for (auto group : pi_splitting) {
+			if (belong(st1, group)) {
+				return group;
+			}
+		}
+	}
+	state* ST_to_DFA_transformer::union_states(std::vector<state*> group) {
+		state* new_state = new state();
+		std::map<state*, std::vector<transition*>> incoming_ribs;
+		for (auto st : states) {
+			for (auto a : alphabet) {
+				incoming_ribs[st->transitions[a]->end].push_back(st->transitions[a]);
+			}
+		}
+		for (auto st : group) {
+			new_state->positions.insert(st->positions.begin(), st->positions.end());
+			for (auto rib : incoming_ribs[st]) { //put the ends of incoming ribs
+				rib->end = new_state;
+			}
+			
+		}
+		
+		for (auto st : group) {
+			for (auto a : alphabet) {
+				//if (st->transitions[a]->end != new_state) {
+					new_state->transitions[a] = st->transitions[a];
+					st->transitions[a]->start = new_state;
+				//}
+				//else {
+					
+				//}
+				
+			}
+		}
+		incoming_ribs.clear();
+		return new_state;
+	}
+
+	void ST_to_DFA_transformer::minimize() {
+		std::vector<std::vector<state*>> pi_splitting, new_pi_splitting;
+		std::vector<state*> notgetting_states = states;
+		notgetting_states = remove_states(notgetting_states, getting_states);
+		pi_splitting.push_back(getting_states);
+		pi_splitting.push_back(notgetting_states);
+		new_pi_splitting = pi_splitting;
+		do {
+			pi_splitting = new_pi_splitting;
+			for (auto group : pi_splitting) {
+				
+				for (auto st1 : group) {
+					std::vector<state*> new_group;
+					for (auto st2 : group) {
+						for (auto a : alphabet) {
+							std::vector<state*> gr1, gr2;
+							gr1 = get_group_owner(st1->transitions[a]->end, pi_splitting);
+							gr2 = get_group_owner(st2->transitions[a]->end, pi_splitting);
+							if (gr1 != gr2) {
+								new_group.push_back(st2);
+								break;
+							}
+						}
+					}
+					if (new_group.size() > 0) {
+						//разделяем мы эту же группу, поэтому возможно её не нужно искать
+						std::vector<std::vector<state*>>::iterator it;
+						for (it = new_pi_splitting.begin(); it != new_pi_splitting.end(); it++) { 
+							if (*it == group) {
+								*it = remove_states(group, new_group);
+								break;
+							}
+						}
+
+						new_pi_splitting.push_back(new_group);
+						new_group.clear();
+						break;
+					}
+					else {
+						new_group.clear();
+					}
+				}
+			}
+		} while (new_pi_splitting != pi_splitting);
+		
+		getting_states.clear();
+		std::map<std::string, std::set<long>> regex_map = get_regex_map();
+		std::vector<state*> new_states;
+		for (auto group : pi_splitting) {
+			state* new_state = union_states(group);
+			if (belong(start_state, group)) {
+				start_state = new_state;
+			}
+			for (auto pos : regex_map["$"]) {
+				if (new_state->positions.find(pos) != new_state->positions.end()) {
+					getting_states.push_back(new_state);
+				}
+			}
+			new_states.push_back(new_state);
+		}
+		states.clear();
+		states = new_states;
 	}
 }

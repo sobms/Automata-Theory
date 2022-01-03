@@ -49,7 +49,7 @@ namespace RegexLib {
 								expr_vec[i]->tag = A_node;
 							}
 
-							Node* CG_node = new Node(" ", Capture_group_node, expr_vec[i - 1], expr_vec[i]);
+							Node* CG_node = new Node(" ", Choise_group_node, expr_vec[i - 1], expr_vec[i]);
 							expr_vec[i]->parent = CG_node;
 							expr_vec[i - 1]->parent = CG_node;
 							expr_vec[i] = CG_node;
@@ -182,7 +182,7 @@ namespace RegexLib {
 		}
 		void SyntaxTree::bypass(Node* ptr, int idx, int prev) {
 			std::map <int, std::string> tag = { {A_node, "A_node"}, {Star_node, "Star_node"}, {Or_node, "Or_node"},
-				{And_node, "And_node"}, {Capture_group_node, "Capture_group_node"}, {Repeat_node, "Repeat_node"},  {Empty_str, "Empty_str"} };
+				{And_node, "And_node"}, {Choise_group_node, "Choise_group_node"}, {Repeat_node, "Repeat_node"},  {Empty_str, "Empty_str"} };
 			if (ptr->parent) {
 				graph += std::to_string(prev) + "->" + std::to_string(idx) + ";\n";
 			}
@@ -196,7 +196,7 @@ namespace RegexLib {
 			if (ptr->symb == "\\") {
 				ptr->symb = "\\\\";
 			}
-			graph += std::to_string(prev) + " [label=\"" + std::to_string(prev) + " " + ptr->symb + " " 
+			graph += std::to_string(prev) + " [label=\"" + std::to_string(prev) + " " + ptr->symb 
 				+ " (" + tag[ptr->tag] + ")" + "\"];\n";
 		}
 		void SyntaxTree::getTreeImg() {

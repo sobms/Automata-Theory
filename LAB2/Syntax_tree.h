@@ -11,7 +11,7 @@ namespace RegexLib {
 		Star_node,
 		Or_node,
 		And_node,
-		Capture_group_node,
+		Choise_group_node,
 		Repeat_node,
 		Empty_str
 	};
