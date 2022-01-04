@@ -354,14 +354,8 @@ namespace RegexLib {
 		
 		for (auto st : group) {
 			for (auto a : alphabet) {
-				//if (st->transitions[a]->end != new_state) {
-					new_state->transitions[a] = st->transitions[a];
-					st->transitions[a]->start = new_state;
-				//}
-				//else {
-					
-				//}
-				
+				new_state->transitions[a] = st->transitions[a];
+				st->transitions[a]->start = new_state;		
 			}
 		}
 		incoming_ribs.clear();

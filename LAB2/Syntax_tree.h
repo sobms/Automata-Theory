@@ -27,6 +27,16 @@ namespace RegexLib {
 		long id_pos;
 		Node(std::string symbol, Tag t, Node* l = nullptr, Node* r = nullptr, Node* p = nullptr, long id = -1) :
 			symb(symbol), tag(t), id_pos(id), left(l), right(r), parent(p), nullable(false) {}
+		bool operator ==(Node& node2) {
+			if ((left == node2.left) && (right == node2.right) && (parent == node2.parent) &&
+				(tag == node2.tag) && (nullable == node2.nullable) && (first == node2.first) &&
+				(last == node2.last) && (symb == node2.symb) && (id_pos = node2.id_pos)) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 	};
 
 	class SyntaxTree {
@@ -44,7 +54,7 @@ namespace RegexLib {
 		Node* re2tree(std::string expr);
 
 		void bypass(Node* ptr, int idx, int prev);
-
+		void reveal_repeat_node(Node& ptr);
 		void getTreeImg();
 	};
 }

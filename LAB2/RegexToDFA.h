@@ -37,6 +37,9 @@ namespace RegexLib {
 		std::vector<state*> get_states() {
 			return states;
 		}
+		std::set<std::string> get_alphabet() {
+			return alphabet;
+		}
 		void numerate(); 
 		void set_nullable(Node* temp_node);
 		void set_first(Node* temp_node);

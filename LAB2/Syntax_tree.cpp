@@ -6,8 +6,57 @@
 #include "Syntax_tree.h"
 
 namespace RegexLib {
-
-		Node* SyntaxTree::re2tree(std::string expr) {
+	Node* new_nodes(Node* ptr) {
+		Node* new_ptr = nullptr;
+		Node* new_ptr1 = nullptr;
+		Node* new_ptr2 = nullptr;
+		if (ptr->left) {
+			new_ptr1 = new_nodes(ptr->left);
+		} 
+		if (ptr->right) {
+			new_ptr2 = new_nodes(ptr->right);
+		}
+		new_ptr = new Node(*ptr);
+		new_ptr->left = new_ptr1;
+		if (new_ptr1) {
+			new_ptr1->parent = new_ptr;
+		}
+		new_ptr->right = new_ptr2;
+		if (new_ptr2) {
+			new_ptr2->parent = new_ptr;
+		}
+		return new_ptr;
+	}
+	void SyntaxTree::reveal_repeat_node(Node& ptr) {
+		if (ptr.left) {
+			reveal_repeat_node(*ptr.left);
+		}
+		if (ptr.right) {
+			reveal_repeat_node(*ptr.right);
+		}
+		if (ptr.tag == Repeat_node) {
+			Node* ptr_left2 = new_nodes(ptr.left);
+			Node* and_node = new Node("&", And_node, ptr.left, ptr_left2);
+			ptr.left->parent = and_node;
+			for (int i = 0; i < atoi(ptr.symb.c_str())-2; i++) {
+				ptr.left = new_nodes(ptr.left);
+				and_node = new Node("&", And_node, and_node, ptr.left);
+				and_node->left->parent = and_node;
+				and_node->right->parent = and_node;
+			}
+			if (*ptr.parent->right == ptr) {
+				ptr.parent->right = and_node;
+				and_node->parent = ptr.parent;
+			}
+			else {
+				ptr.parent->left = and_node;
+				and_node->parent = ptr.parent;
+			}
+			ptr = *and_node;			
+		}
+	}
+		
+	Node* SyntaxTree::re2tree(std::string expr) {
 			std::vector<Node*> expr_vec;
 
 			expr = "((" + expr + ")$)"; //0 //ADDED $ IN THE END OF STRING
@@ -178,9 +227,10 @@ namespace RegexLib {
 				}
 			} while (expr_vec.size()>1);
 			root = expr_vec[0]; // set_root(expr_vec[0]);
+			reveal_repeat_node(*root);
 			return root;
-		}
-		void SyntaxTree::bypass(Node* ptr, int idx, int prev) {
+	}
+	void SyntaxTree::bypass(Node* ptr, int idx, int prev) {
 			std::map <int, std::string> tag = { {A_node, "A_node"}, {Star_node, "Star_node"}, {Or_node, "Or_node"},
 				{And_node, "And_node"}, {Choise_group_node, "Choise_group_node"}, {Repeat_node, "Repeat_node"},  {Empty_str, "Empty_str"} };
 			if (ptr->parent) {
@@ -196,10 +246,15 @@ namespace RegexLib {
 			if (ptr->symb == "\\") {
 				ptr->symb = "\\\\";
 			}
+			std::string output = "{";
+			for (auto s : ptr->first) {
+				output += std::to_string(s) + ",";
+			}
+			output += "}";
 			graph += std::to_string(prev) + " [label=\"" + std::to_string(prev) + " " + ptr->symb 
-				+ " (" + tag[ptr->tag] + ")" + "\"];\n";
-		}
-		void SyntaxTree::getTreeImg() {
+				+ " " + output + " (" + tag[ptr->tag] + ")" + "\"];\n";
+	}
+	void SyntaxTree::getTreeImg() {
 			Node* ptr = get_root();
 			bypass(ptr, 1, 1);
 			graph += "}";
@@ -208,5 +263,5 @@ namespace RegexLib {
 			gvLayout(gvc, Graph, "dot");
 			int res = gvRenderFilename(gvc, Graph, "jpeg", "D:\\Automata-Theory-main\\LAB2\\out.jpg");
 			agclose(Graph);
-		}
+	}
 }
