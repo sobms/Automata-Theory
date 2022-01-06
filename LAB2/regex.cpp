@@ -68,65 +68,92 @@ namespace RegexLib {
 	std::set<std::string> regex::find_all(std::string str, std::string regexpr) {
 		return regex::find_all(str, regex::compile(regexpr));
 	}
-	std::map<std::pair<long, long>, std::set<std::vector<transition*>>> add_k_paths(int k, std::map<std::pair<long, long>,
-		std::set<std::vector<transition*>>> k_paths, long start_state_id, long dest_state_id);
 
-	std::map<std::pair<long, long>, std::set<std::vector<transition*>>> check_k_path(int k, std::map<std::pair<long, long>,
-		std::set<std::vector<transition*>>> k_paths, long start_state_id, long dest_state_id) {
-		if (k == -1) {
-			return k_paths;
-		}
-		if (k_paths[std::make_pair(start_state_id, k)].size() == 0) {
-			k_paths = check_k_path(k - 1, k_paths, start_state_id, k);
-		}
-		if (k_paths[std::make_pair(k, dest_state_id)].size() == 0) {
-			k_paths = check_k_path(k - 1, k_paths, k, dest_state_id);
-		}
-		if ((k_paths[std::make_pair(start_state_id, k)].size() > 0) && (k_paths[std::make_pair(k, dest_state_id)].size() > 0)) {
-			for (auto p : k_paths[std::make_pair(start_state_id, k)]) {
-				for (auto p2 : k_paths[std::make_pair(k, dest_state_id)]) {
-					if (k_paths[std::make_pair(k, k)].size() > 0) {
-						for (auto p1 : k_paths[std::make_pair(k, k)]) {
-							std::vector<transition*> path;
-							path.insert(path.end(), p.begin(), p.end());
-							path.insert(path.end(), p1.begin(), p1.end());
-							path.insert(path.end(), p2.begin(), p2.end());
-							k_paths[std::make_pair(start_state_id, dest_state_id)].insert(path);
-						}
+	void regex::induction_step(long start_state_id, long dest_state_id, long k, std::map<std::pair<long, long>,
+		std::vector<transition*>> paths) {
+		std::string R_i_j, R_i_k, R_k_j, R_k_k;
+		std::set<std::string> special_symbols = { "|", "*", "\\", "[", "]", "{","}", "#", "(", ")" };
+		if (k == 0) {
+			std::string str;
+			if (paths[std::make_pair(start_state_id, dest_state_id)].size() > 0) {
+				for (auto path : paths[std::make_pair(start_state_id, dest_state_id)]) {
+					if (special_symbols.find(path->symbol) != special_symbols.end()) {
+						path->symbol = "\\" + path->symbol;
 					}
-					else {
-						std::vector<transition*> path;
-						path.insert(path.end(), p.begin(), p.end());
-						path.insert(path.end(), p2.begin(), p2.end());
-						k_paths[std::make_pair(start_state_id, dest_state_id)].insert(path);
-					}
-				}	
-			}
-		}
-		return k_paths;
-	}
-	std::map<std::pair<long, long>, std::set<std::vector<transition*>>> add_k_paths(int k, std::map<std::pair<long, long>, 
-		std::set<std::vector<transition*>>> k_paths, long start_state_id, long dest_state_id, std::map<state*, long> dfa_states) {
-		for (int i = k; i > -1; i--) {
-			k_paths = check_k_path(i, k_paths, start_state_id, dest_state_id);
-
-			std::map<std::pair<long, long>, std::set<std::vector<transition*>>>::iterator it;
-			for (it = k_paths.begin(); it != k_paths.end();) {
-				if (it->second.size() == 0) {
-					it = k_paths.erase(it);
+					str += path->symbol + "|";
+				}
+				str.pop_back();
+				if (str.size() > 1) {
+					regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = "(" + str + ")";
 				}
 				else {
-					it++;
+					regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = str;
 				}
 			}
-		}		
-		return k_paths;
+			else {
+				if (start_state_id == dest_state_id) {
+					regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = "#";
+				}
+				else {
+				regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = "";
+				}
+			}
+		}
+		else {
+			if (regexpr.count(std::make_tuple(start_state_id, dest_state_id, k - 1)) == 0) {
+				induction_step(start_state_id, dest_state_id, k - 1, paths);
+			}
+			R_i_j = regexpr[std::make_tuple(start_state_id, dest_state_id, k - 1)];
+			if (regexpr.count(std::make_tuple(start_state_id, k, k - 1)) == 0) {
+				 induction_step(start_state_id, k, k - 1, paths);
+			}
+			R_i_k = regexpr[std::make_tuple(start_state_id, k, k - 1)];
+			if (regexpr.count(std::make_tuple(k, dest_state_id, k - 1)) == 0) {
+				induction_step(k, dest_state_id, k - 1, paths);
+			}
+			R_k_j = regexpr[std::make_tuple(k, dest_state_id, k - 1)];
+			if (regexpr.count(std::make_tuple(k, k, k - 1)) == 0) {
+				induction_step(k, k, k - 1, paths);
+			}
+			R_k_k = regexpr[std::make_tuple(k, k, k - 1)];
+			if (R_i_k == "#") {
+				R_i_k = "";
+			}
+			if (R_k_j == "#") {
+				R_k_j = "";
+			}
+			if (R_k_k == "#") {
+				R_k_k = "";
+			}
+			switch (4*(R_i_j.size() > 0) + 2*(R_i_k.size() > 0 && R_k_j.size() > 0) + (R_k_k.size() > 0)) {
+			case (7):
+				regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = "(" + R_i_j + "|" + R_i_k + "(" + R_k_k + ")" + "*" + R_k_j + ")";
+				break;
+			case (6):
+				regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = "(" + R_i_j + "|" + R_i_k + R_k_j + ")";
+				break;
+			case (5):
+				regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = R_i_j;
+				break;
+			case (4):
+				regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = R_i_j;
+				break;
+			case (3):
+				regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = R_i_k + "(" + R_k_k + ")" + "*" + R_k_j;
+				break;
+			case (2):
+				regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = R_i_k + R_k_j;
+				break;
+			default:
+				regexpr[std::make_tuple(start_state_id, dest_state_id, k)] = "";
+			}
+		}
 	}
-
+	
 	std::string regex::DFAtoRE(DFA* dfa) {
 		std::string RegExpr;
 		std::map<state*, long> dfa_states;
-		std::map<std::pair<long,long>, std::set<std::vector<transition*>>> k_paths;
+		std::map<std::pair<long,long>, std::vector<transition*>> paths;
 		std::vector<state*> states = dfa->get_states();
 		std::vector<state*> getting_states = dfa->get_getting_states();
 		std::set<std::string> alphabet = dfa->get_alphabet();
@@ -141,31 +168,15 @@ namespace RegexLib {
 			for (auto a : alphabet) {
 				long from = dfa_states[st->transitions[a]->start];
 				long to = dfa_states[st->transitions[a]->end];
-				std::vector<transition*> path;
-				path.push_back(st->transitions[a]);
-				k_paths[std::make_pair(from, to)].insert(path);
+				paths[std::make_pair(from, to)].push_back(st->transitions[a]);
 			}
 		}
 		state* start_state = dfa->get_start_state();
 		for (auto st : getting_states) {
-			k_paths = add_k_paths(k, k_paths, dfa_states[start_state], dfa_states[st], dfa_states);
-			int i = 0;
-			int sz = k_paths[std::make_pair(dfa_states[start_state], dfa_states[st])].size();
-			for (auto path : k_paths[std::make_pair(dfa_states[start_state], dfa_states[st])]) {
-				for (auto t : path) {
-					if (t->start == t->end) {
-						RegExpr += t->symbol + "*";
-					}
-					else {
-						RegExpr += t->symbol;
-					}
-				}
-				if (i < sz - 1) {
-					RegExpr += "|";
-					i++;
-				}
-			}
+			induction_step(dfa_states[start_state], dfa_states[st], k, paths);
+			RegExpr += regexpr[std::make_tuple(dfa_states[start_state], dfa_states[st], k)] + "|";
 		}
+		RegExpr.pop_back();
 
 		return RegExpr;
 	}

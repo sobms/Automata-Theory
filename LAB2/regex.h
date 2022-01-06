@@ -1,4 +1,5 @@
 #include "RegexToDFA.h"
+#include <tuple>
 
 namespace RegexLib {
 	class DFA {
@@ -33,11 +34,14 @@ namespace RegexLib {
 	};
 	class regex : public ST_to_DFA_transformer {
 	private:
+		std::map<std::tuple<long, long, long>, std::string> regexpr;
 	public:
 		regex() : ST_to_DFA_transformer() {}
 		DFA* compile(std::string expr);
 		std::set<std::string> find_all(std::string str, std::string regexpr);
 		std::set<std::string> find_all(std::string str, DFA* dfa);
+		void induction_step(long start_state_id, long dest_state_id, long k, std::map<std::pair<long, long>,
+			std::vector<transition*>> paths);
 		std::string DFAtoRE(DFA* dfa);
 	};
 }
