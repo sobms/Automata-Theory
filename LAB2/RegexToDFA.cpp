@@ -6,6 +6,7 @@
 #include <gvc.h>
 
 namespace RegexLib {
+
 	void ST_to_DFA_transformer::numerate() {
 		Node* ptr = get_root();
 		std::stack <Node*> S;
@@ -30,6 +31,7 @@ namespace RegexLib {
 			}
 		}
 	}
+
 	void ST_to_DFA_transformer::set_nullable(Node* temp_node) {
 		switch (temp_node->tag)
 		{
@@ -56,6 +58,7 @@ namespace RegexLib {
 			break;
 		}
 	}
+
 	void ST_to_DFA_transformer::set_first(Node* temp_node) {
 		switch (temp_node->tag)
 		{
@@ -89,6 +92,7 @@ namespace RegexLib {
 			break;
 		}
 	}
+
 	void ST_to_DFA_transformer::set_last(Node* temp_node) {
 		switch (temp_node->tag)
 		{
@@ -122,6 +126,7 @@ namespace RegexLib {
 			break;
 		}
 	}
+
 	void ST_to_DFA_transformer::set_follow_pos(Node* temp_node) {
 		switch (temp_node->tag)
 		{
@@ -144,6 +149,7 @@ namespace RegexLib {
 			break;
 		}
 	}
+
 	void ST_to_DFA_transformer::Calc_attributes(Node* ptr) {
 		if (ptr->left) {
 			Calc_attributes(ptr->left);
@@ -156,6 +162,7 @@ namespace RegexLib {
 		set_last(ptr);
 		set_follow_pos(ptr);
 	}
+
 	std::map<std::string, std::set<long>> ST_to_DFA_transformer::get_regex_map() {
 		std::map<std::string, std::set<long>> regex_map;
 		Node* ptr = get_root();
@@ -177,6 +184,7 @@ namespace RegexLib {
 		}
 		return regex_map;
 	}
+
 	state* find_state(std::vector<state*> set_state, std::set<long> state_positions) {
 		for (auto state : set_state) {
 			if (state->positions == state_positions) {
@@ -185,6 +193,7 @@ namespace RegexLib {
 		}
 		return NULL;
 	}
+
 	void ST_to_DFA_transformer::transform() {
 		std::map<std::string, std::set<long>> regex_map = get_regex_map(); // каждому символу сопоставляется набор позиций,
 		// на которых он находится
@@ -195,6 +204,14 @@ namespace RegexLib {
 		std::vector<state*> set_states;
 		std::vector<state*> processed_states;
 		set_states.push_back(start_state);
+		//add start state to getting state
+		for (auto pos : regex_map["$"]) {
+			if ((start_state->positions.find(pos) != start_state->positions.end())
+				&& (!find_state(getting_states, start_state->positions))) {
+				getting_states.push_back(start_state);
+				start_state->isgetting = true;
+			}
+		}
 
 		while (!set_states.empty()) {
 			state* temp_state = set_states.back();
@@ -225,6 +242,7 @@ namespace RegexLib {
 						if ((new_state->positions.find(pos) != new_state->positions.end()) 
 							&& (!find_state(getting_states, new_state->positions))) {
 							getting_states.push_back(new_state);
+							new_state->isgetting = true;
 						}
 					}
 					
@@ -239,6 +257,7 @@ namespace RegexLib {
 		}
 		states = processed_states;
 	}
+
 	std::string ToString(std::set<long> s) {
 		std::string str;
 		for (auto i : s) {
@@ -246,6 +265,7 @@ namespace RegexLib {
 		}
 		return str;
 	}
+
 	void ST_to_DFA_transformer::getDFAImg() {
 		std::string graph = "digraph graphname {";
 		std::vector<state*> set_states;
@@ -302,13 +322,13 @@ namespace RegexLib {
 		}
 
 		graph += "}";
-		std::cout << graph;
 		Agraph_t* Graph = agmemread(graph.c_str());
 		GVC_t* gvc = gvContext();
 		gvLayout(gvc, Graph, "dot");
 		int res = gvRenderFilename(gvc, Graph, "jpeg", "D:\\Automata-Theory-main\\LAB2\\outDFA.jpg");
 		agclose(Graph);
 	}
+
 	std::vector<state*> remove_states(std::vector<state*> set_states, std::vector<state*> removing_states) {
 		std::vector<state*>::iterator it;
 		for (auto rm_state : removing_states) {
@@ -321,6 +341,7 @@ namespace RegexLib {
 		}
 		return set_states;
 	}
+
 	bool belong(state* st1, std::vector<state*> set_states) {
 		for (auto st2 : set_states) {
 			if (st1 == st2) {
@@ -329,6 +350,7 @@ namespace RegexLib {
 		}
 		return false;
 	}
+
 	std::vector<state*> get_group_owner(state* st1, std::vector<std::vector<state*>> pi_splitting) {
 		for (auto group : pi_splitting) {
 			if (belong(st1, group)) {
@@ -336,6 +358,7 @@ namespace RegexLib {
 			}
 		}
 	}
+
 	state* ST_to_DFA_transformer::union_states(std::vector<state*> group) {
 		state* new_state = new state();
 		std::map<state*, std::vector<transition*>> incoming_ribs;
@@ -411,6 +434,9 @@ namespace RegexLib {
 		std::map<std::string, std::set<long>> regex_map = get_regex_map();
 		std::vector<state*> new_states;
 		for (auto group : pi_splitting) {
+			if (group.size() == 0) {
+				continue;
+			}
 			state* new_state = union_states(group);
 			if (belong(start_state, group)) {
 				start_state = new_state;

@@ -8,9 +8,12 @@ namespace RegexLib {
 		std::set<long> positions;
 		bool isgetting;
 		state(bool isgetting = false) : isgetting(isgetting) {}
+		state(bool isgetting, std::map<std::string, struct transition*> transitions, std::set<long> positions) : 
+			isgetting(isgetting), transitions(transitions), positions(positions) {}
+		state(const state& st) : transitions(st.transitions), positions(st.positions), isgetting(st.isgetting) {}
 	};
 	typedef struct transition {
-		std::string symbol; //возможно избыточность
+		std::string symbol; 
 		state* start;
 		state* end;
 		transition(std::string symbol = "\0", state* start = nullptr, state* end = nullptr) :

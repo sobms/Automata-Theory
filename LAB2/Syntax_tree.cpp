@@ -1,11 +1,13 @@
 ﻿#include <iostream>
 #include <map>
 #include <vector>
+#include <stack>
 #include <gvc.h>
 #include <algorithm>
 #include "Syntax_tree.h"
 
 namespace RegexLib {
+
 	Node* new_nodes(Node* ptr) {
 		Node* new_ptr = nullptr;
 		Node* new_ptr1 = nullptr;
@@ -27,6 +29,7 @@ namespace RegexLib {
 		}
 		return new_ptr;
 	}
+
 	void SyntaxTree::reveal_repeat_node(Node& ptr) {
 		if (ptr.left) {
 			reveal_repeat_node(*ptr.left);
@@ -230,6 +233,7 @@ namespace RegexLib {
 			reveal_repeat_node(*root);
 			return root;
 	}
+
 	void SyntaxTree::bypass(Node* ptr, int idx, int prev) {
 			std::map <int, std::string> tag = { {A_node, "A_node"}, {Star_node, "Star_node"}, {Or_node, "Or_node"},
 				{And_node, "And_node"}, {Choise_group_node, "Choise_group_node"}, {Repeat_node, "Repeat_node"},  {Empty_str, "Empty_str"} };
@@ -254,6 +258,7 @@ namespace RegexLib {
 			graph += std::to_string(prev) + " [label=\"" + std::to_string(prev) + " " + ptr->symb 
 				+ " " + output + " (" + tag[ptr->tag] + ")" + "\"];\n";
 	}
+
 	void SyntaxTree::getTreeImg() {
 			Node* ptr = get_root();
 			bypass(ptr, 1, 1);
@@ -263,5 +268,36 @@ namespace RegexLib {
 			gvLayout(gvc, Graph, "dot");
 			int res = gvRenderFilename(gvc, Graph, "jpeg", "D:\\Automata-Theory-main\\LAB2\\out.jpg");
 			agclose(Graph);
+	}
+
+	std::string SyntaxTree::tree2re(Node* ptr) {
+		std::string prefix, suffix, str;
+		if (ptr->left) {
+			prefix = tree2re(ptr->left);
+		}
+		
+		if ((special_symbols.find(ptr->symb) != special_symbols.end()) && (ptr->tag == A_node)) {
+			str += "\\" + ptr->symb;
+		}
+		else if (ptr->tag == Choise_group_node) {
+			str += "|";
+		}
+		else if ((ptr->tag == And_node) || (ptr->symb == "$")) {
+			str += "";
+		}
+		else {
+			str += ptr->symb;
+		}
+		if (ptr->right) {
+			suffix = tree2re(ptr->right);
+		}
+		
+		if ((ptr->left) && (ptr->left->tag > ptr->tag)) {
+			prefix = "(" + prefix + ")";
+		}
+		if ((ptr->right) && (ptr->right->tag > ptr->tag)) {
+			suffix = "(" + suffix + ")";
+		}
+		return prefix + str + suffix;
 	}
 }
