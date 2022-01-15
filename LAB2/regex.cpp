@@ -7,7 +7,8 @@ namespace RegexLib {
 	DFA* regex::compile(std::string expr) {
 		SyntaxTree tree = SyntaxTree();
 		Node* root = tree.re2tree(expr);
-		ST_to_DFA_transformer trans = ST_to_DFA_transformer(root);
+		ST_to_DFA_transformer trans = ST_to_DFA_transformer(tree.get_cap_group_ptrs(), root);
+		set_cap_group_ptrs(tree.get_cap_group_ptrs());
 		trans.numerate();
 		trans.Calc_attributes(root);
 		tree.getTreeImg();
@@ -107,6 +108,13 @@ namespace RegexLib {
 
 	std::set<std::string> regex::find_all(std::string str, std::string regexpr) {
 		return regex::find_all(str, regex::compile(regexpr));
+	}
+	/////////////////////////
+	matches* regex::find_all2(std::string regex, std::string str) {
+		matches* m = new matches();
+		m->re2tree(regex);
+		m->set_string(str);
+		return m;
 	}
 
 	void regex::induction_step(long start_state_id, long dest_state_id, long k, std::map<std::pair<long, long>,
@@ -217,7 +225,12 @@ namespace RegexLib {
 			induction_step(dfa_states[start_state], dfa_states[st], k, paths);
 			RegExpr += regexpr[std::make_tuple(dfa_states[start_state], dfa_states[st], k)] + "|";
 		}
-		RegExpr.pop_back();
+		if (!RegExpr.empty()) {
+			RegExpr.pop_back();
+		}
+		else {
+			RegExpr = ""; //empty set of language (not empty string)
+		}
 
 		return RegExpr;
 	}
@@ -309,15 +322,20 @@ namespace RegexLib {
 		std::set<std::string> alphabet = dfa->get_alphabet();
 		std::set<std::string> special_symbols = { "|", "*", "\\", "[", "]", "{","}", "#", "(", ")" };
 		std::string universum_L = "(";
+
+		if (alphabet.size() == 0) {
+			universum_L = "(#$)"; //because alphabet is empty
+		}
 		for (auto a : alphabet) {
 			if (special_symbols.find(a) != special_symbols.end()) {
 				a = "\\" + a;
 			}
 			universum_L += a + "|";
 		}
-		universum_L.pop_back();
-		universum_L += ")*";
-
+		if (alphabet.size()) {
+			universum_L.pop_back();
+			universum_L += ")*";
+		}
 		DFA* dfa_universum = compile(universum_L);
 		DFA* difference = dfa_production(dfa_universum, dfa);
 
@@ -327,5 +345,54 @@ namespace RegexLib {
 	std::string regex::complement(std::string regexpr) {
 		DFA* dfa = compile(regexpr);
 		return complement(dfa);
+	}
+	//////////////////////////
+	std::set<std::string> matches::operator[] (int idx) {
+		Node* main_root = get_root();  // get root of tree
+		std::vector<Node*> group_ptrs = get_cap_group_ptrs();
+		if (idx > group_ptrs.size()) {
+			throw std::exception("Index out of range.");
+		}
+		else if (idx == 0) {
+			ST_to_DFA_transformer(get_cap_group_ptrs(), get_root());
+			numerate();
+			Calc_attributes(get_root());
+			getTreeImg();
+			transform();
+			getDFAImg();
+			minimize();
+			getDFAImg();
+			DFA* dfa = new DFA(get_start_state(), get_getting_states(), get_states(), get_alphabet());
+			clear();
+			return find_all(str, dfa);
+		}
+		Node* root = group_ptrs[idx-1]; // get root of subtree
+
+		Node* parent = root->parent;	//remember real parent
+		Node* end_node = new Node("$", A_node, nullptr, nullptr);
+		Node* fake_root = new Node("&", And_node, root, end_node);
+		root->parent = fake_root;
+		end_node->parent = fake_root;
+
+		set_root(fake_root); //!!!
+
+		ST_to_DFA_transformer(get_cap_group_ptrs(), get_root());
+		numerate();
+		Calc_attributes(get_root());
+		getTreeImg();
+		transform();
+		getDFAImg();
+		minimize();
+		getDFAImg();
+		DFA* cap_group_dfa = new DFA(get_start_state(), get_getting_states(), get_states(), get_alphabet());
+		clear();
+
+		//return all back
+		delete end_node;
+		delete fake_root;
+		root->parent = parent;
+		set_root(main_root);
+
+		return find_all(str, cap_group_dfa);
 	}
 }

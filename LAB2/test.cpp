@@ -55,7 +55,7 @@ TEST(numerate, RegexToDFATest) {
 			ptr = ptr->right;
 		}
 	}
-}	
+}
 void Set_all_nullable(Node* ptr, ST_to_DFA_transformer trans) {
 	if (ptr->left) {
 		Set_all_nullable(ptr->left, trans);
@@ -91,6 +91,7 @@ TEST(set_nullable, RegexToDFATest) {
 	Node* root = tree.re2tree("(t|m)|([ph#])\\**");
 	ST_to_DFA_transformer trans = ST_to_DFA_transformer(root);
 	Set_all_nullable(root, trans);
+	tree.getTreeImg();
 	std::vector<long> vec_nullable = Get_nullable_vec(root);
 	std::vector<long> vec_nullable_true = { 0,0,0,1,0,0,0,1,1,1,0,1,0,0 };
 	ASSERT_EQ(vec_nullable, vec_nullable_true);
@@ -135,10 +136,10 @@ TEST(set_first, RegexToDFATest) {
 	std::vector<std::set<long>> vec_first = Get_first_vec(root);
 	std::vector<std::set<long>> true_sets_vec;
 	true_sets_vec.push_back({ 0 });
-	true_sets_vec.push_back({ 0, 1});
+	true_sets_vec.push_back({ 0, 1 });
 	true_sets_vec.push_back({ 1 });
 	true_sets_vec.push_back({ 0,1,2,3,5 });
-	true_sets_vec.push_back({2 });
+	true_sets_vec.push_back({ 2 });
 	true_sets_vec.push_back({ 2,3 });
 	true_sets_vec.push_back({ 3 });
 	true_sets_vec.push_back({ 2,3 });
@@ -226,7 +227,7 @@ TEST(set_follow, RegexToDFATest) {
 	trans->numerate();
 	Set_all_follow(root, trans);
 	std::map<long, std::set<long>> followPos = trans->get_followPos();
-	std::map<long,std::set<long>> true_fp;
+	std::map<long, std::set<long>> true_fp;
 	true_fp[0] = { 6 };
 	true_fp[1] = { 6 };
 	true_fp[2] = { 5,6 };
@@ -243,12 +244,12 @@ TEST(find_all, regexTest) {
 	ASSERT_EQ(set_substrings, true_set);
 
 	std::set<std::string> set_substrings2 = re.find_all("mempiiemiiierfdfmepemphhmhhiii", "(me|m)[ph]|i*");
-	std::set<std::string> true_set2 = { "mep", "mp", "mh", "ii", "iii", ""};
+	std::set<std::string> true_set2 = { "mep", "mp", "mh", "ii", "iii", "" };
 	ASSERT_EQ(set_substrings2, true_set2);
 
 	DFA* automaton2 = re.compile("ab*([def]{2}|aa)");
 	std::set<std::string> set_substrings3 = re.find_all("abdefaababaaaabdeadebaabdeaa", automaton2);
-	std::set<std::string> true_set3 = { "abde", "ade", "abaa"};
+	std::set<std::string> true_set3 = { "abde", "ade", "abaa" };
 	ASSERT_EQ(set_substrings3, true_set3);
 }
 
@@ -256,6 +257,7 @@ TEST(DFAtoRE, regexTest) {
 	regex re;
 	DFA* automaton = re.compile("(t|m)([ph#]|i{2})\\**");
 	std::string regexpr = re.DFAtoRE(automaton);
+	DFA* automaton4 = re.compile(regexpr);
 	std::set<std::string> set_substrings = re.find_all("tmphppii**t*mphhh*miiqwetppp", regexpr);
 	std::set<std::string> true_set = { "mii", "mp", "t", "t*", "tp" };
 	ASSERT_EQ(set_substrings, true_set);
@@ -302,6 +304,7 @@ TEST(complement, regexTest) {
 
 	std::string L_comp3 = re.complement("a|b*");
 	std::string L_comp4 = re.complement(L_comp3);
+	std::string L_comp5 = re.complement("#");
 	ASSERT_EQ("#|(b|b(b)*b)|a", L_comp4);
 }
 int main(int argc, char* argv[])

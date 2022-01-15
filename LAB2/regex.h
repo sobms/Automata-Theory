@@ -50,6 +50,8 @@ namespace RegexLib {
 		}
 	};
 
+	class matches;
+
 	class regex : public ST_to_DFA_transformer {
 	private:
 		std::map<std::tuple<long, long, long>, std::string> regexpr;
@@ -58,6 +60,7 @@ namespace RegexLib {
 		DFA* compile(std::string expr);
 		std::set<std::string> find_all(std::string str, std::string regexpr);
 		std::set<std::string> find_all(std::string str, DFA* dfa);
+		matches* find_all2(std::string regex, std::string str);
 		void induction_step(long start_state_id, long dest_state_id, long k, std::map<std::pair<long, long>,
 			std::vector<transition*>> paths);
 		std::string DFAtoRE(DFA* dfa);
@@ -65,5 +68,31 @@ namespace RegexLib {
 		std::string inversion(std::string regexpr);
 		std::string complement(DFA* dfa);
 		std::string complement(std::string regexpr);
+	};
+	
+	class matches : public regex {
+		friend class mathes_iter;
+	private:
+		std::string str;
+	public:
+		matches() : regex() {}
+		void set_string(std::string s) {
+			str = s;
+		}
+		std::set<std::string> operator[] (int idx); //remake
+
+
+		typedef mathes_iter iterator;
+		iterator begin();
+		iterator end();
+	};
+
+	class mathes_iter {
+	private:
+
+	public:
+		const mathes_iter operator ++ (int);
+		matches operator * ();
+		bool operator != (const mathes_iter& it);
 	};
 }

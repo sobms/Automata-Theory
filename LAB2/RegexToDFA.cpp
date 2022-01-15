@@ -7,6 +7,30 @@
 
 namespace RegexLib {
 
+	void ST_to_DFA_transformer::clear() {
+		start_state = nullptr;
+		getting_states.clear();
+		followPos.clear();
+		alphabet.clear();
+		states.clear();
+		Node* ptr = get_root();
+		std::stack <Node*> S;
+		int i = 0;
+		while (!S.empty() || ptr) {
+			while (ptr) {
+				S.push(ptr);
+				ptr = ptr->left;
+			}
+			if (!S.empty()) {
+				ptr = S.top();
+				ptr->first.clear();
+				ptr->last.clear();
+				S.pop();
+				ptr = ptr->right;
+			}
+		}
+	}
+
 	void ST_to_DFA_transformer::numerate() {
 		Node* ptr = get_root();
 		std::stack <Node*> S;
@@ -305,8 +329,11 @@ namespace RegexLib {
 				else {
 					second_ind = index_map[temp_state->transitions[a]->end->positions];
 				}
-
-				graph += std::to_string(first_ind) + "->" + std::to_string(second_ind) + " [label=\"" + temp_state->transitions[a]->symbol + "\"];\n";
+				std::string s = temp_state->transitions[a]->symbol;
+				if (s == "\\") {
+					s = "\\\\";
+				}
+				graph += std::to_string(first_ind) + "->" + std::to_string(second_ind) + " [label=\"" + s + "\"];\n";
 
 				std::vector<state*> union_states;
 				union_states.insert(union_states.end(), set_states.begin(), set_states.end());
@@ -324,9 +351,14 @@ namespace RegexLib {
 		graph += "}";
 		Agraph_t* Graph = agmemread(graph.c_str());
 		GVC_t* gvc = gvContext();
-		gvLayout(gvc, Graph, "dot");
-		int res = gvRenderFilename(gvc, Graph, "jpeg", "D:\\Automata-Theory-main\\LAB2\\outDFA.jpg");
-		agclose(Graph);
+		if (Graph) {
+			gvLayout(gvc, Graph, "dot");
+			int res = gvRenderFilename(gvc, Graph, "jpeg", "D:\\Automata-Theory-main\\LAB2\\outDFA.jpg");
+			agclose(Graph);
+		}
+		else {
+			std::cout << "Graph was not built";
+		}
 	}
 
 	std::vector<state*> remove_states(std::vector<state*> set_states, std::vector<state*> removing_states) {

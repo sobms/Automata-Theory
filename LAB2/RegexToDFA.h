@@ -29,8 +29,10 @@ namespace RegexLib {
 		std::vector<state*> states;
 	public:
 
-		ST_to_DFA_transformer(Node* root = nullptr, state* st = nullptr) : SyntaxTree(root), start_state(st){}
-		
+		ST_to_DFA_transformer(Node* root = nullptr, state* st = nullptr) : SyntaxTree(root), start_state(st) {}
+		ST_to_DFA_transformer(std::vector<Node*> cap_group_ptrs, Node* root = nullptr, state* st = nullptr) : 
+			SyntaxTree(cap_group_ptrs, root), start_state(st) {}
+
 		state* get_start_state() {
 			return start_state;
 		}
@@ -43,6 +45,9 @@ namespace RegexLib {
 		std::set<std::string> get_alphabet() {
 			return alphabet;
 		}
+		std::map<long, std::set<long>> get_followPos() {
+			return followPos;
+		}
 		void numerate(); 
 		void set_nullable(Node* temp_node);
 		void set_first(Node* temp_node);
@@ -54,5 +59,6 @@ namespace RegexLib {
 		state* union_states(std::vector<state*> group);
 		void minimize();
 		void getDFAImg();
+		void clear();
 	};
 }
