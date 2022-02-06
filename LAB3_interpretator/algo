@@ -1,0 +1,40 @@
+<PROGRAM>
+
+<VARDECLARATION><VAR = dcount><TYPE>INT</TYPE></VAR><VAR = x><TYPE>INT</TYPE></VAR><VAR = y><TYPE>INT</TYPE></VAR>
+</VARDECLARATION>
+
+
+
+<SETSTART><VAR name = x></VAR> <VAR name = y></VAR></SETSTART>
+
+<FUNC name = main>
+<VARDECLARATION><VAR = xpos><TYPE>INT</TYPE></VAR>
+<VAR = ypos><TYPE>INT</TYPE></VAR></VARDECLARATION>
+
+<ASSIGN><VALUE><VAR name = x></VAR></VALUE><TO><VAR name = xpos></VAR></TO></ASSIGN>
+<ASSIGN><VALUE><VAR name = y></VAR></VALUE><TO><VAR name = ypos></VAR></TO></ASSIGN>
+<SENDDRONS>2</SENDDRONS>
+<SETUSED><VAR name = xpos></VAR> <VAR name = ypos></VAR></SETUSED>
+<GETDRONSCOUNT>dcount</GETDRONSCOUNT>
+
+<SWITCH><CONDITION><CHECK><LOOK><SUB><VAR name = xpos></VAR> 1</SUB> <VAR name = ypos></VAR></LOOK></CHECK>
+<DO><ASSIGN><VALUE><SUB><VAR name = xpos></VAR> 1</SUB></VALUE><TO><VAR name = x></VAR></TO></ASSIGN>
+<ASSIGN><VALUE><VAR name = ypos></VAR></VALUE><TO><VAR name = y></VAR></TO></ASSIGN>
+<LEFT>1</LEFT><CALL>main</CALL><RIGHT>1</RIGHT></DO></CONDITION></SWITCH>
+
+<SWITCH><CONDITION><CHECK><LOOK><ADD><VAR name = xpos></VAR> 1</ADD> <VAR name = ypos></VAR></LOOK></CHECK>
+<DO><ASSIGN><VALUE><ADD><VAR name = xpos></VAR> 1</ADD></VALUE><TO><VAR name = x></VAR></TO></ASSIGN>
+<ASSIGN><VALUE><VAR name = ypos></VAR></VALUE><TO><VAR name = y></VAR></TO></ASSIGN>
+<RIGHT>1</RIGHT><CALL>main</CALL><LEFT>1</LEFT></DO></CONDITION></SWITCH>
+
+<SWITCH><CONDITION><CHECK><LOOK><VAR name = xpos></VAR> <SUB><VAR name = ypos></VAR> 1</SUB></LOOK></CHECK>
+<DO><ASSIGN><VALUE><VAR name = xpos></VAR></VALUE><TO><VAR name = x></VAR></TO></ASSIGN>
+<ASSIGN><VALUE><SUB><VAR name = ypos></VAR> 1</SUB></VALUE><TO><VAR name = y></VAR></TO></ASSIGN>
+<UP>1</UP><CALL>main</CALL><DOWN>1</DOWN></DO></CONDITION></SWITCH>
+
+<SWITCH><CONDITION><CHECK><LOOK><VAR name = xpos></VAR> <ADD><VAR name = ypos></VAR> 1</ADD></LOOK></CHECK>
+<DO><ASSIGN><VALUE><VAR name = xpos></VAR></VALUE><TO><VAR name = x></VAR></TO></ASSIGN>
+<ASSIGN><VALUE><ADD><VAR name = ypos></VAR> 1</ADD></VALUE><TO><VAR name = y></VAR></TO></ASSIGN>
+<DOWN>1</DOWN><CALL>main</CALL><UP>1</UP></DO></CONDITION></SWITCH>
+</FUNC>
+</PROGRAM>

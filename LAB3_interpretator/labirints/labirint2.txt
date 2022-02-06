@@ -1,0 +1,10 @@
+6
+0 
+4
+4
+E E E E E W
+E W E W E E
+W W Q W E W
+E E W W E E
+E W W W E E
+E E E E E W
